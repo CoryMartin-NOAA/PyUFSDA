@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+# gfsnc2gctl
+# script to generate a GrADS control file
+# for a given FV3GFS netCDF Gaussian history file
+# Cory.R.Martin@noaa.gov
+# October 21, 2019
+import netCDF4 as nc
+import argparse
+
+def get_timeinfo(ncf):
+  import datetime as dt
+  from cftime import _parse_date
+  time_units = ncf['time'].units
+  date_str = time_units.split('since ')[1]
+  initstr = '%04i%02i%02i%02i' % _parse_date(date_str)[0:4]
+  inittime = dt.datetime.strptime(initstr,"%Y%m%d%H")
+  nfhour = int(ncf['time'][0])
+  validtime = inittime + dt.timedelta(hours=nfhour)
+  return validtime
+
+def gfsnc2gctl(ncfile, ctlfile):
+  # open the netCDF file
+  ncf = nc.Dataset(ncfile)
+  # get dimension information
+  xlen = int(len(ncf.dimensions['grid_xt']))
+  ylen = int(len(ncf.dimensions['grid_yt']))
+  zlen = int(len(ncf.dimensions['pfull'])) 
+  dx = 360./float(xlen)
+
+  # start writing the ctl file
+  ctl = open(ctlfile, 'w')
+  ctl.write('DSET '+ncfile+'\n')
+  ctl.write('DTYPE netcdf\n')
+  ctl.write('TITLE gfsnc2gctl '+ncfile.split('/')[-1]+'\n')
+  ctl.write('UNDEF -1.e10 _FillValue\n')
+  ctl.write('OPTIONS yrev zrev\n')
+  ctl.write('XDEF {0:d} LINEAR 0 {1:.3f}\n'.format(xlen, dx))
+  # write out latitudes explicitly
+  lats = ncf.variables['lat'][:]
+  ctl.write('YDEF {0:d} LEVELS\n'.format(ylen))
+  i = ylen-1
+  j = 0
+  while i >= 0:
+    if j == 10:
+      j = 0
+      ctl.write('\n') # newline
+    ctl.write(' {0:.3f}'.format(lats[i,0]))
+    i -= 1
+    j += 1
+  ctl.write('\n')
+  # zdef
+  ctl.write('ZDEF {0:d} LINEAR 1 1\n'.format(zlen))
+  # tdef
+  validtime = get_timeinfo(ncf)
+  ctl.write('TDEF 1 LINEAR '+validtime.strftime('%Hz%d%b%Y')+' 6hr\n')
+  # vars
+  # first loop through to get number of 3D and 4D vars
+  nvars = 0
+  for var in ncf.variables.keys():
+    if ncf.variables[var].ndim >= 3:
+      nvars += 1
+  ctl.write('VARS {0:d}\n'.format(nvars))
+  # now loop through the vars and write out each line
+  for var in ncf.variables.keys():
+    if ncf.variables[var].ndim < 3:
+      continue
+    if ncf.variables[var].ndim == 3:
+      dimstr = 't,y,x'
+      levstr = '1'
+    else:
+      dimstr = 't,z,y,x'
+      levstr = '{0:d}'.format(zlen)
+    ctl.write(var+'=>'+var+' '+levstr+' '+dimstr+' '+ncf.variables[var].getncattr('long_name')+'\n')
+  ctl.write('ENDVARS\n')
+  ctl.close()
+  ncf.close()
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+           description = 'This Python-based utility will read a FV3GFS netCDF history file and produce a GrADS control file')
+  parser.add_argument('ncfile', help='path to netCDF file to process', type=str)
+  parser.add_argument('ctlfile', help='path to output GrADS control file', type=str)
+  args = parser.parse_args()
+  gfsnc2gctl(args.ncfile, args.ctlfile)
