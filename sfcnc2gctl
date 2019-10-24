@@ -65,7 +65,7 @@ def sfcnc2gctl(ncfile, ctlfile):
       continue
     if ncf.variables[var].ndim == 3:
       dimstr = 't,y,x'
-      levstr = '1'
+      levstr = '0'
     ctl.write(var+'=>'+var+' '+levstr+' '+dimstr+' '+ncf.variables[var].getncattr('long_name')+'\n')
   ctl.write('ENDVARS\n')
   ctl.close()
