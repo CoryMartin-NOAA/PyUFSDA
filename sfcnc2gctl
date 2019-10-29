@@ -28,7 +28,10 @@ def sfcnc2gctl(ncfile, ctlfile):
 
   # start writing the ctl file
   ctl = open(ctlfile, 'w')
-  ctl.write('DSET '+ncfile+'\n')
+  if os.path.isabs(ncfile):
+    ctl.write('DSET '+ncfile+'\n')
+  else:
+    ctl.write('DSET ^'+ncfile+'\n')
   ctl.write('DTYPE netcdf\n')
   ctl.write('TITLE sfcnc2gctl '+ncfile.split('/')[-1]+'\n')
   ctl.write('UNDEF -1.e10 missing_value\n')

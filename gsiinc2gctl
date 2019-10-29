@@ -18,7 +18,10 @@ def gsiinc2gctl(ncfile, ctlfile):
 
   # start writing the ctl file
   ctl = open(ctlfile, 'w')
-  ctl.write('DSET '+ncfile+'\n')
+  if os.path.isabs(ncfile):
+    ctl.write('DSET '+ncfile+'\n')
+  else:
+    ctl.write('DSET ^'+ncfile+'\n')
   ctl.write('DTYPE netcdf\n')
   ctl.write('TITLE gsiinc2gctl '+ncfile.split('/')[-1]+'\n')
   ctl.write('UNDEF -3.e38\n')
