@@ -5,8 +5,29 @@
 # script to return initial and valid time 
 # for specified netCDF file
 import argparse
-import gsi_utils
 import datetime
+
+def get_timeinfo(ncfile):
+  """ get_timeinfo(ncfile)
+   - function to return datetime objects of initialized time and valid time
+   input: ncfile - string to path to netCDF file
+   returns: inittime, validtime - datetime objects
+            nfhour - integer forecast hour
+  """
+  import netCDF4 as nc
+  import datetime as dt
+  from cftime import _parse_date
+  ncf = nc.Dataset(ncfile)
+  time_units = ncf['time'].units
+  date_str = time_units.split('since ')[1]
+  initstr = '%04i%02i%02i%02i' % _parse_date(date_str)[0:4]
+  inittime = dt.datetime.strptime(initstr,"%Y%m%d%H")
+  nfhour = int(ncf['time'][0])
+  validtime = inittime + dt.timedelta(hours=nfhour)
+  ncf.close()
+
+  return inittime, validtime, nfhour
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
@@ -20,7 +41,7 @@ if __name__ == '__main__':
   parser.add_argument('-f','--fhour', action='store_true', default=False,
                       help='option to print out forecast hour')
   args = parser.parse_args()
-  inittime, validtime, nfhour = gsi_utils.get_timeinfo(args.ncfile)
+  inittime, validtime, nfhour = get_timeinfo(args.ncfile)
   if args.init:
      print(inittime.strftime("%Y%m%d%H%M"))
   elif args.valid:

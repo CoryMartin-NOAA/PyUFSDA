@@ -5,7 +5,24 @@
 # script to return length of requested dimension
 # for specified netCDF file
 import argparse
-import gsi_utils
+
+def get_ncdims(ncfile):
+  """ get_ncdims(ncfile)
+   - function to return dictionary of netCDF file dimensions and their lengths
+   input: ncfile - string to path to netCDF file
+   output: ncdims - dictionary where key is the name of a dimension and the
+                    value is the length of that dimension
+
+               ex:  ncdims['pfull'] = 127
+  """
+  import netCDF4 as nc
+  ncf = nc.Dataset(ncfile)
+  ncdims = {}
+  for d in ncf.dimensions.keys():
+    ncdims[d] = int(len(ncf.dimensions[d]))
+  ncf.close()
+
+  return ncdims
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
@@ -13,5 +30,5 @@ if __name__ == '__main__':
   parser.add_argument('ncfile', help='path to input netCDF file', type=str)
   parser.add_argument('dimname', help='name of dimension (ex: grid_xt)', type=str)
   args = parser.parse_args()
-  FileDims = gsi_utils.get_ncdims(args.ncfile)
+  FileDims = get_ncdims(args.ncfile)
   print(FileDims[args.dimname])
