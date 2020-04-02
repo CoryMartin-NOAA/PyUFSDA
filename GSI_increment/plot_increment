@@ -67,6 +67,8 @@ def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale):
     # read lat/lon values from file
     lat = incfile.variables['lat'][:]
     lon = incfile.variables['lon'][:]
+    lon[lon>180.] = lon[lon>180.]-360.                                                                                                                                                           
+    lon = np.roll(lon,int(len(lon)/2),axis=0)
     lons, lats = np.meshgrid(lon, lat)
 
     # get time information from increment files if it exists
@@ -102,10 +104,11 @@ def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale):
             print('Generating increment plot for var=',var,' lev=', str(int(z)))
             figinfo['lev'] = int(z)
             vardata2d = vardata[int(z)-1,...]
+            vardata2d = np.roll(vardata2d,int(len(lon)/2),axis=1)
             figinfo['min'] = np.nanmin(vardata2d)
             figinfo['max'] = np.nanmax(vardata2d)
             # call plotting function 
-            gen_2d_plot(vardata[int(z)-1,...], lons, lats, figinfo, plotdir)
+            gen_2d_plot(vardata2d, lons, lats, figinfo, plotdir)
 
     print('Increment plot .png graphics saved to: ',plotdir)
 
