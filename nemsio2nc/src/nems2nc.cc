@@ -42,10 +42,15 @@ namespace nems2nc {
  }
 
  int Convert::run() {
-   nems2nc::gfsnc ncfile; 
+   nems2nc::gfsnc ncfile;
    nems2nc::nemsio nemsiofile;
+   // open the NEMSIO file and get header info (time, lat, ak, etc.)
    nemsiofile.open(nemsio_file);
-   ncfile.create(netcdf_file);
+   for (int j = 0; j < nemsiofile.nrec; j++) {
+   std::cout << nemsiofile.recname[j] << std::endl; }
+   // get variable names in input file
+   // create netCDF file with proper dimensions / metadata
+   ncfile.create(netcdf_file, nemsiofile);
    return 0;
  }
 

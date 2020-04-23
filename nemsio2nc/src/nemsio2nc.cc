@@ -10,7 +10,13 @@
   int status;
   nems2nc::Convert nemsio2nc;
   status = nemsio2nc.init(argc, argv);
+  if ( status != 0) {
+    return status;
+  } 
   status = nemsio2nc.run();
+  if ( status != 0) {
+    return status;
+  } 
   status = nemsio2nc.cleanup();
   return status;
  }
