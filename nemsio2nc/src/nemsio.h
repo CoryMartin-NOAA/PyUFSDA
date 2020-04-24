@@ -1,6 +1,7 @@
 #ifndef NEMSIO2NC_NEMSIO
 #define NEMSIO2NC_NEMSIO
 #include <string>
+#include <map>
 #include <vector>
 
 namespace nems2nc {
@@ -18,8 +19,9 @@ namespace nems2nc {
      double* ak = NULL;
      double* bk = NULL;
      std::vector<std::string> recname;
-     std::vector<std::string> reclevtyp;
+     std::vector<std::string> reclevtype;
      int* reclev = NULL;
+     std::map<std::string, int> countRecs;
 
      int open(std::string filenamein);
 

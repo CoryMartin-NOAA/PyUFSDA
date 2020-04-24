@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <map>
 #include <cstdlib>
 #include "nemsio.h"
 #include "nemsio_interface.h"
@@ -54,9 +55,21 @@ namespace nems2nc {
      }
      tmpstr.erase(tmpstr.find_last_not_of(" \n\r\t")+1);
      recname.push_back(tmpstr);
-     std::cout << tmpstr << " " << tmpstr.size();
-     std::cout << std::endl;
+     tmpstr="";
+     for (int j = 0; j<10; j++) {
+       int k = i*10 + j;
+       tmpstr = tmpstr + recname_tmp[k];
+     }
+     tmpstr.erase(tmpstr.find_last_not_of(" \n\r\t")+1);
+     reclevtype.push_back(tmpstr);
    }
+   // count duplicate reccord names to figure out which are 2D/3D
+   // Iterate over the vector and store the frequency of each element in map
+   for (auto & elem : recname) {
+      auto result = countRecs.insert(std::pair<std::string, int>(elem, 1));
+      if (result.second == false)
+        result.first->second++;
+      }
    return 0;
  }
 

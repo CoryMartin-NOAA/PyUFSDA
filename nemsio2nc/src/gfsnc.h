@@ -11,6 +11,8 @@ namespace nems2nc {
 
      int create(std::string filenamein, nems2nc::nemsio nemsfile);
 
+     int def_vars(nems2nc::nemsio nemsfile);
+
  };
 }
 

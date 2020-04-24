@@ -6,6 +6,7 @@
 #include "gfsnc.h"
 #include <netcdf.h>
 #include "nemsio.h"
+#include "nems2ncvars.h"
 
 namespace nems2nc {
 
@@ -153,8 +154,53 @@ namespace nems2nc {
    double fhout = static_cast<double>(nemsio.fhour);
    nc_err(nc_put_vara_double( ncid, varid_tmp, start1, count1, &fhout));
 
-   nc_close( ncid); // temporary
    return 0;
+ }
+
+ int gfsnc::def_vars(nems2nc::nemsio nemsio) {
+   // define variables based on what is in the input NEMSIO file
+   // requires 'translation' of variable names
+   int errval, varid_tmp;
+   bool skip;
+   int dimids2[2], dimids3[3];
+   dimids2[0] = ydimid;
+   dimids2[1] = xdimid;
+   dimids3[0] = ydimid;
+   dimids3[1] = xdimid;
+   dimids3[2] = zdimid;
+   nc_err(nc_redef(ncid));
+   // loop through unique records
+   for (auto & elem : nemsio.countRecs) {
+     std::string vname_out;
+     if ( varchanges.count(elem.first) > 0 ) {
+       vname_out = varchanges.at(elem.first);
+     } else {
+       vname_out = elem.first;
+     }
+     skip=false;
+     if ( elem.second == 1 ) {
+        std::cout << "Defining 2D output variable " << vname_out << std::endl;
+        nc_err(nc_def_var( ncid, vname_out.c_str(), NC_FLOAT, 2, dimids2, &varid_tmp));
+     } else if ( elem.second == nemsio.nz ) {
+        std::cout << "Defining 3D output variable "
+                  << vname_out << ", levs=" << elem.second << std::endl;
+        nc_err(nc_def_var( ncid, vname_out.c_str(), NC_FLOAT, 3, dimids3, &varid_tmp));
+     } else {
+        std::cout << "Error! " << vname_out << ", levs=" << elem.second
+        << " != nlevs from NEMSIO header, this var will not be defined." << std::endl;
+        skip=true;
+     }
+     if ( skip == false ) {
+       if ( varlongnames.count(vname_out) > 0 ) {
+       // define variable metadata if defined in the header file
+       std::string long_name;
+       long_name = varlongnames.at(vname_out);
+       std::cout << long_name << " " << long_name.size() << std::endl;
+ //      nc_err(nc_put_att_text( ncid, varid_tmp, "long_name", 16, "de"));
+     }
+   }
+   nc_err(nc_enddef(ncid));
+   nc_err(nc_close(ncid));
  }
 
 }
