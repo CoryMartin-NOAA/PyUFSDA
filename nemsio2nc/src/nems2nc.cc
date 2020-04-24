@@ -51,7 +51,10 @@ namespace nems2nc {
    // create netCDF file with proper dimensions / metadata
    ncfile.create(netcdf_file, nemsiofile);
    // define output variables in netCDF file
-   ncfile.def_vars(nemsiofile);
+   ncfile.def_vars(nemsiofile, deflate);
+   // write variables to output file
+   // ncfile.write_vars(nemsiofile)
+
    return 0;
  }
 

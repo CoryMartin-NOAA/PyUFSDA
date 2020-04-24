@@ -7,6 +7,7 @@
 #include <netcdf.h>
 #include "nemsio.h"
 #include "nems2ncvars.h"
+#include "nems2nc.h"
 
 namespace nems2nc {
 
@@ -157,7 +158,7 @@ namespace nems2nc {
    return 0;
  }
 
- int gfsnc::def_vars(nems2nc::nemsio nemsio) {
+ int gfsnc::def_vars(nems2nc::nemsio nemsio, int deflate) {
    // define variables based on what is in the input NEMSIO file
    // requires 'translation' of variable names
    int errval, varid_tmp;
@@ -180,10 +181,12 @@ namespace nems2nc {
      skip=false;
      if ( elem.second == 1 ) {
         std::cout << "Defining 2D output variable " << vname_out << std::endl;
+        vars2d.push_back(vname_out);
         nc_err(nc_def_var( ncid, vname_out.c_str(), NC_FLOAT, 2, dimids2, &varid_tmp));
      } else if ( elem.second == nemsio.nz ) {
         std::cout << "Defining 3D output variable "
                   << vname_out << ", levs=" << elem.second << std::endl;
+        vars3d.push_back(vname_out);
         nc_err(nc_def_var( ncid, vname_out.c_str(), NC_FLOAT, 3, dimids3, &varid_tmp));
      } else {
         std::cout << "Error! " << vname_out << ", levs=" << elem.second
@@ -191,16 +194,35 @@ namespace nems2nc {
         skip=true;
      }
      if ( skip == false ) {
+       if ( deflate  > 0 ) {
+          // set this variable to use ZLib compression
+          nc_err(nc_def_var_deflate( ncid, varid_tmp, NC_SHUFFLE, 1, deflate));
+       }
        if ( varlongnames.count(vname_out) > 0 ) {
-       // define variable metadata if defined in the header file
-       std::string long_name;
-       long_name = varlongnames.at(vname_out);
-       std::cout << long_name << " " << long_name.size() << std::endl;
- //      nc_err(nc_put_att_text( ncid, varid_tmp, "long_name", 16, "de"));
+          // define variable metadata if defined in the header file
+          std::string long_name;
+          long_name = varlongnames.at(vname_out);
+          nc_err(nc_put_att_text( ncid, varid_tmp, "long_name",
+                                  long_name.size(), long_name.c_str()));
+       }
+       if ( varunits.count(vname_out) > 0 ) {
+          // define variable metadata if defined in the header file
+          std::string units;
+          units = varunits.at(vname_out);
+          nc_err(nc_put_att_text( ncid, varid_tmp, "units",
+                                  units.size(), units.c_str()));
+       }
+       // define these constant metadata that are in the FV3 output netCDF files
+       float missval[1];
+       missval[0] = -1e10f;
+       nc_err(nc_put_att_float( ncid, varid_tmp, "missing_value", NC_FLOAT, 1, missval));
+       nc_err(nc_put_att_float( ncid, varid_tmp, "_FillValue", NC_FLOAT, 1, missval));
+       nc_err(nc_put_att_text( ncid, varid_tmp, "cell_methods", 11, "time: point"));
+       nc_err(nc_put_att_text( ncid, varid_tmp, "output_file", 3, "atm"));
      }
    }
    nc_err(nc_enddef(ncid));
-   nc_err(nc_close(ncid));
+   nc_err(nc_close(ncid)); // temporary
  }
 
 }

@@ -1,6 +1,6 @@
 set(NEMS2NC_SRC nems2nc.cc nems2nc.h)
 add_library(nems2nc ${NEMS2NC_SRC})
-set(GFSNC_SRC gfsnc.cc gfsnc.h nems2ncvars.h)
+set(GFSNC_SRC gfsnc.cc gfsnc.h nems2ncvars.h nems2nc.h)
 add_library(gfsnc ${GFSNC_SRC})
 set(NEMSIOC_SRC nemsio.cc nemsio.h)
 add_library(nemsioc ${NEMSIOC_SRC})
