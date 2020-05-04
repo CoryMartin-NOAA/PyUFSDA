@@ -99,6 +99,36 @@ contains
    end do
  end subroutine nemsio_get_recinfo_c
 
+ subroutine nemsio_readrec_c(recname_in, reclevtyp_in, strlen1, strlen2, reclev_in, npts, values_out) bind(c,name='nemsio_readrec_f90')
+   integer(c_int) :: reclev_in, npts, strlen1, strlen2
+   real(c_double), dimension(npts) :: values_out
+   character(len=1,kind=c_char), dimension(*) :: recname_in, reclevtyp_in
+   character(len=10) :: recname, reclevtyp
+   integer :: i, iret
+   integer(nemsio_intkind) :: reclev
+   real(nemsio_realkind), allocatable, dimension(:) :: tmp1d
+   ! convert strings from C to F
+   do i=1,strlen1
+     recname(i:i) = recname_in(i)
+   end do
+   do i=strlen1+1, 10
+     recname(i:i) = ' '
+   end do
+   do i=1,strlen2
+     reclevtyp(i:i) = reclevtyp_in(i)
+   end do
+   do i=strlen2+1,10
+     reclevtyp(i:i) = ' '
+   end do
+   reclev = reclev_in
+   allocate(tmp1d(npts))
+   !call nemsio_readrecvw34(nemsfile, trim(recname), trim(reclevtyp), lev=reclev, &
+   !                        data=tmp1d(:), iret=iret)
+   call nemsio_readrecvw34(nemsfile, trim(recname), trim(reclevtyp), lev=reclev, data=tmp1d(:), iret=iret)
+   if (iret /= 0) print *, 'NEMSIO F90 ERROR', iret
+   values_out(:) = tmp1d(:)
+ end subroutine nemsio_readrec_c
+
  subroutine get_eta_level(npz, p_s, pf, ph, ak, bk, pscale)
   ! borrowed from FV3GFS
   integer, intent(in) :: npz

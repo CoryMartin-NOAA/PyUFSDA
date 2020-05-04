@@ -12,11 +12,10 @@
   status = nemsio2nc.init(argc, argv);
   if ( status != 0) {
     return status;
-  } 
+  }
   status = nemsio2nc.run();
   if ( status != 0) {
     return status;
-  } 
-  status = nemsio2nc.cleanup();
+  }
   return status;
  }

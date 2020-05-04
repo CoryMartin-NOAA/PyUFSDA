@@ -10,5 +10,5 @@ add_library(nemsio_int ${NEMSIO_INT})
 set(MAIN_SRC nemsio2nc.cc)
 
 add_executable(nemsio2nc ${MAIN_SRC})
-target_link_libraries(nemsio2nc nems2nc gfsnc nemsioc nemsio_int ${NETCDF_LIBRARIES_C} ${NEMSIO_LIBRARY} ${BACIO_LIBRARY})
+target_link_libraries(nemsio2nc nems2nc gfsnc nemsioc nemsio_int ${NETCDF_LIBRARIES_C} ${NEMSIO_LIBRARY} ${BACIO_LIBRARY} ${W3NCO_4_LIBRARY})
 

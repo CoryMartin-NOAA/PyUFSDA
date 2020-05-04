@@ -46,15 +46,15 @@ namespace nems2nc {
    nems2nc::nemsio nemsiofile;
    // open the NEMSIO file and get header info (time, lat, ak, etc.)
    nemsiofile.open(nemsio_file);
-   //for (int j = 0; j < nemsiofile.nrec; j++) {
-   //std::cout << nemsiofile.recname[j] << std::endl; }
    // create netCDF file with proper dimensions / metadata
    ncfile.create(netcdf_file, nemsiofile);
    // define output variables in netCDF file
    ncfile.def_vars(nemsiofile, deflate);
    // write variables to output file
-   // ncfile.write_vars(nemsiofile)
-
+   ncfile.write_vars(nemsiofile, nbits_out);
+   // close output file
+   ncfile.close();
+   // TODO add error handling with return codes?
    return 0;
  }
 

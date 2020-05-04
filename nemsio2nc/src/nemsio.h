@@ -20,10 +20,13 @@ namespace nems2nc {
      double* bk = NULL;
      std::vector<std::string> recname;
      std::vector<std::string> reclevtype;
+     std::vector<std::string> recfields;
      int* reclev = NULL;
      std::map<std::string, int> countRecs;
 
      int open(std::string filenamein);
+     int read_rec(std::string recname,
+                  std::string levtyp, int lev, double* data);
 
  };
 }

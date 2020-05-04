@@ -15,6 +15,10 @@ namespace nems2nc {
 
      int def_vars(nems2nc::nemsio nemsfile, int deflate);
 
+     int write_vars(nems2nc::nemsio nemsfile, int quantize);
+
+     int close();
+
  };
 }
 

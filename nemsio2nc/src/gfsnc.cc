@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <iomanip>
 #include <string>
 #include <sstream>
@@ -178,6 +179,11 @@ namespace nems2nc {
      } else {
        vname_out = elem.first;
      }
+     // remove 'mid layer' if it exists in the record name
+     size_t pos = vname_out.find(" mid layer");
+     std::string midlyr = " mid layer";
+     if (pos != std::string::npos) {
+       vname_out.erase(pos, midlyr.length()); }
      skip=false;
      if ( elem.second == 1 ) {
         std::cout << "Defining 2D output variable " << vname_out << std::endl;
@@ -222,7 +228,64 @@ namespace nems2nc {
      }
    }
    nc_err(nc_enddef(ncid));
-   nc_err(nc_close(ncid)); // temporary
  }
 
+ int gfsnc::write_vars(nems2nc::nemsio nemsio, int quantize) {
+   int errval, varid_tmp;
+   // loop through records
+   for (std::size_t i=0; i < nemsio.recfields.size(); ++i) {
+     // get data from NEMSIO file
+     double nemsdata[nemsio.nx*nemsio.ny];
+     std::cout << "Processing: " << nemsio.recname[i] << "," << nemsio.reclevtype[i]
+               << ",lev=" <<  nemsio.reclev[i] << std::endl;
+     nemsio.read_rec(nemsio.recname[i], nemsio.reclevtype[i], nemsio.reclev[i], nemsdata);
+     // get output name
+     std::string vname_out;
+     if ( varchanges.count(nemsio.recfields[i]) > 0 ) {
+       vname_out = varchanges.at(nemsio.recfields[i]);
+     } else {
+       vname_out = nemsio.recfields[i];
+     }
+     // remove 'mid layer' if it exists in the record name
+     size_t pos = vname_out.find(" mid layer");
+     std::string midlyr = " mid layer";
+     if (pos != std::string::npos) {
+       vname_out.erase(pos, midlyr.length()); }
+     // get the variable netCDF ID
+     nc_err(nc_inq_varid( ncid, vname_out.c_str(), &varid_tmp));
+     float outvar[nemsio.nx*nemsio.ny];
+     int ii = 0;
+     for (int j = 0; j < nemsio.ny; j++) {
+       for (int ji = 0; ji < nemsio.nx; ji++) {
+         outvar[ii] = static_cast<float>(nemsdata[ii]);
+         ii++;
+       }
+     }
+     // is it a 2D or 3D variable?
+     int idx = -999;
+     for (int ji = 0; ji < vars2d.size(); ++ji) {
+       if ( vars2d[ji] == vname_out ) {
+         idx = ji;
+       }
+     }
+     if ( idx != -999 ) {
+       // 2D entire variable written
+       nc_err(nc_put_var_float( ncid, varid_tmp, outvar));
+     } else {
+       // 2D slice of 3D array
+       size_t start3[3], count3[3];
+       start3[0] = 0;
+       count3[0] = nemsio.ny;
+       start3[1] = 0;
+       count3[1] = nemsio.nx;
+       start3[2] = nemsio.nz-nemsio.reclev[i];
+       count3[2] = 1;
+       nc_err(nc_put_vara_float( ncid, varid_tmp, start3, count3, outvar));
+     }
+   }
+ }
+
+ int gfsnc::close() {
+   nc_err(nc_close(ncid));
+ }
 }

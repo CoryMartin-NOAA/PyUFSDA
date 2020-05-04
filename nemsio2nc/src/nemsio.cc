@@ -36,12 +36,13 @@ namespace nems2nc {
    std::cout << "ny = " << ny << std::endl;
    std::cout << "nz = " << nz << std::endl;
    // get ak,bk,ntrac
+   int npts = nx*ny;
    ak = new double[nz+1];
    bk = new double[nz+1];
    phalf = new double[nz+1];
    pfull = new double[nz];
-   lat = new double[nx*ny];
-   lon = new double[nx*ny];
+   lat = new double[npts];
+   lon = new double[npts];
    nemsio_get_akbk_latlon_f90(nx, ny, nz, ak, bk, lat, lon, pfull, phalf, ntrac);
    // get list of records
    reclev = new int[nrec];
@@ -55,17 +56,18 @@ namespace nems2nc {
      }
      tmpstr.erase(tmpstr.find_last_not_of(" \n\r\t")+1);
      recname.push_back(tmpstr);
-     tmpstr="";
+     std::string tmpstr2="";
      for (int j = 0; j<10; j++) {
        int k = i*10 + j;
-       tmpstr = tmpstr + recname_tmp[k];
+       tmpstr2 = tmpstr2 + reclevtyp_tmp[k];
      }
-     tmpstr.erase(tmpstr.find_last_not_of(" \n\r\t")+1);
-     reclevtype.push_back(tmpstr);
+     tmpstr2.erase(tmpstr2.find_last_not_of(" \n\r\t")+1);
+     reclevtype.push_back(tmpstr2);
+     recfields.push_back(tmpstr+" "+tmpstr2);
    }
    // count duplicate reccord names to figure out which are 2D/3D
    // Iterate over the vector and store the frequency of each element in map
-   for (auto & elem : recname) {
+   for (auto & elem : recfields) {
       auto result = countRecs.insert(std::pair<std::string, int>(elem, 1));
       if (result.second == false)
         result.first->second++;
@@ -73,4 +75,12 @@ namespace nems2nc {
    return 0;
  }
 
+ int nemsio::read_rec(std::string recname, std::string levtyp, int lev, double* data) {
+   int npts = nx*ny;
+   int strlen1 = recname.length();
+   int strlen2 = levtyp.length();
+   nemsio_readrec_f90(recname.c_str(),levtyp.c_str(),strlen1,
+                      strlen2,lev, npts, data);
+   return 0;
+ }
 }

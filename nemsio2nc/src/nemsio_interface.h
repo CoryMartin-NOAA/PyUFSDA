@@ -15,6 +15,9 @@ void nemsio_get_akbk_latlon_f90(int & nx, int & ny, int & nz, double* ak, double
 
 void nemsio_get_recinfo_f90(int & nrec, char* recname, char* reclevtyp, int* reclev);
 
+void nemsio_readrec_f90(const char* recname, const char* levtyp, int & strlen1,
+                        int & strlen2, int & lev, int & npts, double* data);
+
 #ifdef __cplusplus
 }
 #endif

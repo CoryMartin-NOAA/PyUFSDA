@@ -33,6 +33,7 @@ find_package (NetCDF REQUIRED)
 include_directories(${NETCDF_INCLUDES})
 find_package( NEMSIO REQUIRED)
 find_package( BACIO REQUIRED)
+find_package( W3NCO REQUIRED)
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)

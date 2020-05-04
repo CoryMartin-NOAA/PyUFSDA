@@ -7,12 +7,14 @@ namespace nems2nc {
   // map of variable names to change between NEMSIO and netCDF
   // these are for only when the input name != output name
   const std::map<std::string, std::string> varchanges = {
-    { "hgt", "hgtsfc" },
-    { "pres", "pressfc" },
+    { "hgt sfc", "hgtsfc" },
+    { "pres sfc", "pressfc" },
+    { "vvel mid layer", "dzdt" },
   };
   const std::map<std::string, std::string> varlongnames = {
     { "hgtsfc", "surface geopotential height" },
     { "pressfc", "surface pressure"},
+    { "pres", "pressure"},
     { "cld_amt", "cloud amount"},
     { "clwmr", "cloud water mixing ratio"},
     { "delz", "height thickness"},
@@ -31,6 +33,7 @@ namespace nems2nc {
   const std::map<std::string, std::string> varunits = {
     { "hgtsfc", "gpm" },
     { "pressfc", "pa"},
+    { "pres", "pa"},
     { "cld_amt", "1"},
     { "clwmr", "kg/kg"},
     { "delz", "m"},
