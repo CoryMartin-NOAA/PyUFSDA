@@ -6,6 +6,7 @@
 # October 21, 2019
 import netCDF4 as nc
 import argparse
+import os
 
 def gsiinc2gctl(ncfile, ctlfile):
   # open the netCDF file
@@ -13,7 +14,7 @@ def gsiinc2gctl(ncfile, ctlfile):
   # get dimension information
   xlen = int(len(ncf.dimensions['lon']))
   ylen = int(len(ncf.dimensions['lat']))
-  zlen = int(len(ncf.dimensions['lev'])) 
+  zlen = int(len(ncf.dimensions['lev']))
   dx = 360./float(xlen)
 
   # start writing the ctl file
