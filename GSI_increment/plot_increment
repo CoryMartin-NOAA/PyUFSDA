@@ -14,7 +14,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import numpy as np
 
 
-def gen_2d_plot(plotdata, lons, lats, figinfo, plotdir):
+def gen_2d_plot(plotdata, lons, lats, figinfo, plotdir, extent=None):
     fig = plt.figure(figsize=(11,6.5))
     plottot = figinfo['plotscale']
     plotmax = abs(max([figinfo['min'],figinfo['max']], key=abs))*plottot # decreasing for plotting only
@@ -23,6 +23,8 @@ def gen_2d_plot(plotdata, lons, lats, figinfo, plotdir):
     ax = plt.axes(projection=crs)
     incplot = plt.pcolormesh(lons, lats, plotdata, vmin=plotmin, vmax=plotmax, transform=crs, cmap='coolwarm')
     ax.coastlines()
+    if extent:
+        ax.set_extent(extent)
     gl = ax.gridlines(crs=crs, draw_labels=True,
                       linewidth=1, color='gray', alpha=0.5, linestyle='--')
     gl.xlabels_top = False
@@ -45,13 +47,13 @@ def gen_2d_plot(plotdata, lons, lats, figinfo, plotdir):
     plt.tight_layout()
     plt.savefig(plotdir+'/'+'gsi_'+figinfo['varname']+'_'+str(figinfo['lev'])+'.png')
 
-def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale):
+def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale, extent=None):
     # open netCDF increment file
     incfile = nc.Dataset(incfilepath,'r')
 
     # if levs_in == [] then get list of levs from file
     if len(levs_in) == 0:
-        levs = incfile.variables['lev'][:] 
+        levs = incfile.variables['lev'][:]
     else:
         levs = levs_in
 
@@ -62,12 +64,12 @@ def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale):
             if len(var.dimensions) > 1:
                 plotvars.append(var.name)
     else:
-        plotvars = plotvars_in 
+        plotvars = plotvars_in
 
     # read lat/lon values from file
     lat = incfile.variables['lat'][:]
     lon = incfile.variables['lon'][:]
-    lon[lon>180.] = lon[lon>180.]-360.                                                                                                                                                           
+    lon[lon>180.] = lon[lon>180.]-360.
     lon = np.roll(lon,int(len(lon)/2),axis=0)
     lons, lats = np.meshgrid(lon, lat)
 
@@ -98,7 +100,7 @@ def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale):
                    'plotscale': plotscale,
                    'validtime': validtime,
                    'anltime': anltime,
-                   'IAUhr': IAUhr, 
+                   'IAUhr': IAUhr,
                   }
         for z in levs:
             print('Generating increment plot for var=',var,' lev=', str(int(z)))
@@ -107,8 +109,8 @@ def plot_incr(incfilepath, plotvars_in, levs_in, plotdir, plotscale):
             vardata2d = np.roll(vardata2d,int(len(lon)/2),axis=1)
             figinfo['min'] = np.nanmin(vardata2d)
             figinfo['max'] = np.nanmax(vardata2d)
-            # call plotting function 
-            gen_2d_plot(vardata2d, lons, lats, figinfo, plotdir)
+            # call plotting function
+            gen_2d_plot(vardata2d, lons, lats, figinfo, plotdir, extent=extent)
 
     print('Increment plot .png graphics saved to: ',plotdir)
 
@@ -119,8 +121,9 @@ if __name__ == '__main__':
     parser.add_argument('incfile', help='path to increment netCDF file', type=str)
     parser.add_argument('-v','--vars', nargs='+', default=[], help='increment variables to plot Ex.: T_inc u_inc v_inc (leave blank for all)')
     parser.add_argument('-z','--levs', nargs='+', default=[], help='increment levels to plot (leave blank for all)')
+    parser.add_argument('-x','--extent', nargs='*', type=int, help='lonw lone lats latn extent')
     parser.add_argument('-p','--plotdir', default='./', help='directory to save figures')
     parser.add_argument('-s','--plotscale', default=1, help='scale factor for plot range (1 is 100%)')
     args = parser.parse_args()
 
-    plot_incr(args.incfile, args.vars, args.levs, args.plotdir, float(args.plotscale))
+    plot_incr(args.incfile, args.vars, args.levs, args.plotdir, float(args.plotscale), extent=args.extent)
